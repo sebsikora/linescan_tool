@@ -1,3 +1,5 @@
+# -------------------------------------------------------
+
 from PIL import Image, ImageFilter
 import numpy as np		
 from scipy.optimize import curve_fit
