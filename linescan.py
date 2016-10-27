@@ -295,7 +295,7 @@ class Wave():
 			return_result = []
 		return return_result
 		
-	def __CalculateVelocity__(self, image_array, settings):
+	def __CalculateGradients__(self, image_array, settings):
 		background_span, peak_threshold_multiplier, distance_threshold, fit_window_span = settings
 		background_row_means, background_row_sds = self.__CharacteriseBackgroundRowWise__(image_array, background_span)
 		row_peaks = self.__FindPeaks__(image_array, background_row_means, background_row_sds, peak_threshold_multiplier)
@@ -304,6 +304,10 @@ class Wave():
 		top_results = self.__FitRegion__(top_peaks, filtered_peaks)
 		bottom_results = self.__FitRegion__(bottom_peaks, filtered_peaks)
 		return filtered_peaks, top_results, bottom_results
+	
+	def __GradientToVelocity__(self, gradient):
+		velocity = gradient * self.line_width * self.lines_per_second
+		return velocity
 	
 	def __PlotResults__(self, display, output_directory, top_results, bottom_results, filtered_peaks):
 		if self.load_type == 'file':
@@ -318,9 +322,13 @@ class Wave():
 		label_lines = []
 		if top_results and bottom_results:
 			fit_gradient = (abs(bottom_results[0][0][0]) + abs(top_results[0][0][0])) / 2.0
+			fit_velocity = (abs(bottom_results[3] + abs(top_results[3]))) / 2.0
 			label_lines.append('Gradient: Upper = ' + str(abs(top_results[0][0][0])))
 			label_lines.append('          Lower = ' + str(abs(bottom_results[0][0][0])))
 			label_lines.append('          Mean = ' + str(fit_gradient))
+			label_lines.append('Velocity: Upper = ' + str(abs(top_results[3])))
+			label_lines.append('          Lower = ' + str(abs(bottom_results[3])))
+			label_lines.append('          Mean = ' + str(fit_velocity))
 			label_lines.append('r^2     : Upper = ' + str(top_results[1]))
 			label_lines.append('          Lower = ' + str(bottom_results[1]))
 		elif bottom_results:
@@ -387,7 +395,11 @@ class Wave():
 	
 	def Analyse(self, display = False, output_directory = '', background_span = 50, peak_threshold_multiplier = 30.0, distance_threshold = 30, fit_window_span = 20):
 		settings = [background_span, peak_threshold_multiplier, distance_threshold, fit_window_span]
-		filtered_peaks, top_results, bottom_results = self.__CalculateVelocity__(self.filtered_image_array, settings)
+		filtered_peaks, top_results, bottom_results = self.__CalculateGradients__(self.filtered_image_array, settings)
+		if top_results:
+			top_results.append(self.__GradientToVelocity__(top_results[0][0][0]))
+		if bottom_results:
+			bottom_results.append(self.__GradientToVelocity__(bottom_results[0][0][0]))
 		if top_results or bottom_results:
 			self.__PlotResults__(display, output_directory, top_results, bottom_results, filtered_peaks)
 			status, notes = self.__CreateTableEntry__(top_results, bottom_results, filtered_peaks)
