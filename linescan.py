@@ -246,17 +246,18 @@ class Wave():
 		final_peaks = []
 		peaks = np.array(peaks)
 		for i, current_peak in enumerate(peaks):
-			hit = False
-			if (i <= len(peaks) - (fit_window_span + 1)) and (i >= fit_window_span):
+			if (i <= fit_window_span):
+				peaks_subset = peaks[0: fit_window_span]
+			elif (i <= len(peaks) - (fit_window_span + 1)) and (i > fit_window_span):
 				peaks_subset = peaks[i - fit_window_span: i + fit_window_span]
-				result = curve_fit(self.__f__, peaks_subset[:, 1], peaks_subset[:, 0])
-				fit_point = self.__f__(current_peak[1], result[0][0], result[0][1])
-				if (current_peak[0] > (fit_point + distance_threshold)) or (current_peak[0] < (fit_point - distance_threshold)):
-					hit = False
-				else:
-					hit = True
-			if hit == True:
-				final_peaks.append(current_peak)
+			elif (i > len(peaks) - (fit_window_span + 1)):
+				peaks_subset = peaks[len(peaks) - (fit_window_span + 1): -1]
+			result = curve_fit(self.__f__, peaks_subset[:, 1], peaks_subset[:, 0])
+			fit_point = self.__f__(current_peak[1], result[0][0], result[0][1])
+			if (current_peak[0] > (fit_point + distance_threshold)) or (current_peak[0] < (fit_point - distance_threshold)):
+				pass
+			else:
+				final_peaks.append(current_peak)	
 		return np.array(final_peaks)
 		
 	def __FindSplit__(self, image_array, final_peaks):
@@ -278,10 +279,10 @@ class Wave():
 			for i in range(region_peaks.shape[0] - fit_window_span):
 				# Get a subset of the data, to which we will try and fit a straight line.
 				peaks_fitting_window = region_peaks[i:i + fit_window_span,:]
-				result = curve_fit(self.__f__, peaks_fitting_window[:, 1], peaks_fitting_window[:, 0])
+				result = curve_fit(self.__f__, peaks_fitting_window[:, 0], peaks_fitting_window[:, 1])
 				# Calculate the fit data and calculate the sum of the squared error between it and the actual wavefront.
-				fit_y = self.__f__(peaks_fitting_window[:,1], result[0][0], result[0][1])
-				sse = np.sum((peaks_fitting_window[:,0] - fit_y) ** 2.0)
+				fit_y = self.__f__(peaks_fitting_window[:,0], result[0][0], result[0][1])
+				sse = np.sum((peaks_fitting_window[:,1] - fit_y) ** 2.0)
 				# If it's the lowest sse yet, store this fit.
 				#print sse
 				if sse <= lowest_sse:
@@ -307,7 +308,8 @@ class Wave():
 	def __PlotResults__(self, display, output_directory, top_results, bottom_results, filtered_peaks):
 		if self.load_type == 'file':
 			if not output_directory:
-				output_directory = ''.join([chunk + '/' for chunk in source_filepath.split('/')[:-1]])
+				print self.source_filepath
+				output_directory = ''.join([chunk + '/' for chunk in self.source_filepath.split('/')[:-1]])
 			source_filename = self.source_filepath.split('/')[-1][:-4]	
 		else:
 			source_filename = self.source_filepath
@@ -338,11 +340,15 @@ class Wave():
 			plt.text(10, 20 + (20 * i), current_label_line, fontsize=6, color = 'white')
 		
 		if bottom_results:
-			plt.plot(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
-			plt.plot(self.__f__(bottom_results[2][:,1], bottom_results[0][0][0], bottom_results[0][0][1]), bottom_results[2][:,1], 'black')
+			#plt.plot(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
+			self.__PlotSeries__(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
+			#plt.plot(self.__f__(bottom_results[2][:,1], bottom_results[0][0][0], bottom_results[0][0][1]), bottom_results[2][:,1], 'black')
+			self.__PlotSeries__(bottom_results[2][:,0], self.__f__(bottom_results[2][:,0], bottom_results[0][0][0], bottom_results[0][0][1]),'black')
 		if top_results:
-			plt.plot(top_results[2][:,0], top_results[2][:,1], 'red')
-			plt.plot(self.__f__(top_results[2][:,1], top_results[0][0][0], top_results[0][0][1]), top_results[2][:,1], 'black')
+			#plt.plot(top_results[2][:,0], top_results[2][:,1], 'red')
+			self.__PlotSeries__(top_results[2][:,0], top_results[2][:,1], 'red')
+			#plt.plot(self.__f__(top_results[2][:,1], top_results[0][0][0], top_results[0][0][1]), top_results[2][:,1], 'black')
+			self.__PlotSeries__(top_results[2][:,0], self.__f__(top_results[2][:,0], top_results[0][0][0], top_results[0][0][1]), 'black')
 		
 		plt.axis((0, self.original_image_array.shape[1], self.original_image_array.shape[0], 0))
 		plt.axis('off')
@@ -358,6 +364,9 @@ class Wave():
 			plt.show()
 		else:
 			plt.close()
+	
+	def __PlotSeries__(self, x_values, y_values, colour):
+		plt.plot(x_values, y_values, color = colour)
 	
 	def __CreateTableEntry__(self, top_results, bottom_results, filtered_peaks):
 		if filtered_peaks.shape[0] < int(self.original_image_array.shape[0] / 4.0):
