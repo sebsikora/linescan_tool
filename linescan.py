@@ -202,7 +202,6 @@ class LineScan():
 	
 class Wave():
 	def __init__(self, name, image_array, lines_per_second, line_width):
-		self.load_type = 'array'
 		self.source_filepath = name
 		self.original_image_array = image_array
 		self.lines_per_second = lines_per_second
@@ -312,74 +311,74 @@ class Wave():
 		velocity = gradient * self.line_width * self.lines_per_second
 		return velocity
 	
-	def __PlotResults__(self, display, output_directory, top_results, bottom_results, filtered_peaks):
-		if self.load_type == 'file':
-			if not output_directory:
-				print self.source_filepath
-				output_directory = ''.join([chunk + '/' for chunk in self.source_filepath.split('/')[:-1]])
-			source_filename = self.source_filepath.split('/')[-1][:-4]	
-		else:
-			source_filename = self.source_filepath
-		self.__CreateFolders__([output_directory + 'good', output_directory + 'suspect'])
-		
-		label_lines = []
-		if top_results and bottom_results:
-			fit_gradient = (abs(bottom_results[0][0][0]) + abs(top_results[0][0][0])) / 2.0
-			fit_velocity = (abs(bottom_results[3] + abs(top_results[3]))) / 2.0
-			label_lines.append('Gradient: Upper = ' + str(abs(top_results[0][0][0])))
-			label_lines.append('          Lower = ' + str(abs(bottom_results[0][0][0])))
-			label_lines.append('          Mean = ' + str(fit_gradient))
-			label_lines.append('Velocity: Upper = ' + str(abs(top_results[3])))
-			label_lines.append('          Lower = ' + str(abs(bottom_results[3])))
-			label_lines.append('          Mean = ' + str(fit_velocity))
-			label_lines.append('r^2     : Upper = ' + str(top_results[1]))
-			label_lines.append('          Lower = ' + str(bottom_results[1]))
-		elif bottom_results:
-			fit_gradient = abs(bottom_results[0][0][0])
-			fit_velocity = abs(bottom_results[3])
-			label_lines.append('Gradient: Lower = ' + str(abs(bottom_results[0][0][0])))
-			label_lines.append('r^2       Lower = ' + str(bottom_results[1]))
-		elif top_results:
-			fit_gradient = abs(top_results[0][0][0])
-			fit_velocity = abs(top_results[3])
-			label_lines.append('Gradient: Upper = ' + str(abs(top_results[0][0][0])))
-			label_lines.append('r^2     : Upper = ' + str(top_results[1]))
-		
-		self.fig = plt.figure()
-		plt.imshow(self.original_image)
-		plt.title(source_filename)
-		
-		for i, current_label_line in enumerate(label_lines):
-			plt.text(10, 20 + (20 * i), current_label_line, fontsize=6, color = 'white')
-		
-		if bottom_results:
-			#plt.plot(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
-			self.__PlotSeries__(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
-			#plt.plot(self.__f__(bottom_results[2][:,1], bottom_results[0][0][0], bottom_results[0][0][1]), bottom_results[2][:,1], 'black')
-			self.__PlotSeries__(bottom_results[2][:,0], self.__f__(bottom_results[2][:,0], bottom_results[0][0][0], bottom_results[0][0][1]),'black')
-		if top_results:
-			#plt.plot(top_results[2][:,0], top_results[2][:,1], 'red')
-			self.__PlotSeries__(top_results[2][:,0], top_results[2][:,1], 'red')
-			#plt.plot(self.__f__(top_results[2][:,1], top_results[0][0][0], top_results[0][0][1]), top_results[2][:,1], 'black')
-			self.__PlotSeries__(top_results[2][:,0], self.__f__(top_results[2][:,0], top_results[0][0][0], top_results[0][0][1]), 'black')
-		
-		plt.axis((0, self.original_image_array.shape[1], self.original_image_array.shape[0], 0))
-		plt.axis('off')
-		self.fig.tight_layout()
-		
-		if filtered_peaks.shape[0] < (self.original_image_array.shape[0] / 4.0):
-			output_direction_choice = 'suspect/'
-		else:
-			output_direction_choice = 'good/'
-		plt.savefig(output_directory + output_direction_choice + source_filename + '.png', bbox_inches='tight')
-		
-		if display == True:
-			plt.show()
-		else:
-			plt.close()
-	
-	def __PlotSeries__(self, x_values, y_values, colour):
-		plt.plot(x_values, y_values, color = colour)
+	#~def __PlotResults__(self, display, output_directory, top_results, bottom_results, filtered_peaks):
+		#~if self.load_type == 'file':
+			#~if not output_directory:
+				#~print self.source_filepath
+				#~output_directory = ''.join([chunk + '/' for chunk in self.source_filepath.split('/')[:-1]])
+			#~source_filename = self.source_filepath.split('/')[-1][:-4]	
+		#~else:
+			#~source_filename = self.source_filepath
+		#~self.__CreateFolders__([output_directory + 'good', output_directory + 'suspect'])
+		#~
+		#~label_lines = []
+		#~if top_results and bottom_results:
+			#~fit_gradient = (abs(bottom_results[0][0][0]) + abs(top_results[0][0][0])) / 2.0
+			#~fit_velocity = (abs(bottom_results[3] + abs(top_results[3]))) / 2.0
+			#~label_lines.append('Gradient: Upper = ' + str(abs(top_results[0][0][0])))
+			#~label_lines.append('          Lower = ' + str(abs(bottom_results[0][0][0])))
+			#~label_lines.append('          Mean = ' + str(fit_gradient))
+			#~label_lines.append('Velocity: Upper = ' + str(abs(top_results[3])))
+			#~label_lines.append('          Lower = ' + str(abs(bottom_results[3])))
+			#~label_lines.append('          Mean = ' + str(fit_velocity))
+			#~label_lines.append('r^2     : Upper = ' + str(top_results[1]))
+			#~label_lines.append('          Lower = ' + str(bottom_results[1]))
+		#~elif bottom_results:
+			#~fit_gradient = abs(bottom_results[0][0][0])
+			#~fit_velocity = abs(bottom_results[3])
+			#~label_lines.append('Gradient: Lower = ' + str(abs(bottom_results[0][0][0])))
+			#~label_lines.append('r^2       Lower = ' + str(bottom_results[1]))
+		#~elif top_results:
+			#~fit_gradient = abs(top_results[0][0][0])
+			#~fit_velocity = abs(top_results[3])
+			#~label_lines.append('Gradient: Upper = ' + str(abs(top_results[0][0][0])))
+			#~label_lines.append('r^2     : Upper = ' + str(top_results[1]))
+		#~
+		#~self.fig = plt.figure()
+		#~plt.imshow(self.original_image)
+		#~plt.title(source_filename)
+		#~
+		#~for i, current_label_line in enumerate(label_lines):
+			#~plt.text(10, 20 + (20 * i), current_label_line, fontsize=6, color = 'white')
+		#~
+		#~if bottom_results:
+			#~#plt.plot(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
+			#~self.__PlotSeries__(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
+			#~#plt.plot(self.__f__(bottom_results[2][:,1], bottom_results[0][0][0], bottom_results[0][0][1]), bottom_results[2][:,1], 'black')
+			#~self.__PlotSeries__(bottom_results[2][:,0], self.__f__(bottom_results[2][:,0], bottom_results[0][0][0], bottom_results[0][0][1]),'black')
+		#~if top_results:
+			#~#plt.plot(top_results[2][:,0], top_results[2][:,1], 'red')
+			#~self.__PlotSeries__(top_results[2][:,0], top_results[2][:,1], 'red')
+			#~#plt.plot(self.__f__(top_results[2][:,1], top_results[0][0][0], top_results[0][0][1]), top_results[2][:,1], 'black')
+			#~self.__PlotSeries__(top_results[2][:,0], self.__f__(top_results[2][:,0], top_results[0][0][0], top_results[0][0][1]), 'black')
+		#~
+		#~plt.axis((0, self.original_image_array.shape[1], self.original_image_array.shape[0], 0))
+		#~plt.axis('off')
+		#~self.fig.tight_layout()
+		#~
+		#~if filtered_peaks.shape[0] < (self.original_image_array.shape[0] / 4.0):
+			#~output_direction_choice = 'suspect/'
+		#~else:
+			#~output_direction_choice = 'good/'
+		#~plt.savefig(output_directory + output_direction_choice + source_filename + '.png', bbox_inches='tight')
+		#~
+		#~if display == True:
+			#~plt.show()
+		#~else:
+			#~plt.close()
+	#~
+	#~def __PlotSeries__(self, x_values, y_values, colour):
+		#~plt.plot(x_values, y_values, color = colour)
 	
 	def __CreateTableEntry__(self, top_results, bottom_results, filtered_peaks):
 		if filtered_peaks.shape[0] < int(self.original_image_array.shape[0] / 4.0):
@@ -398,25 +397,26 @@ class Wave():
 			status = 'short'
 		return status, notes
 	
-	def Analyse(self, display = False, output_directory = '', background_span = 50, peak_threshold_multiplier = 30.0, distance_threshold = 30, fit_window_span = 20):
+	def Analyse(self, display_plots = True, save_plots = True, output_directory = '', background_span = 50, peak_threshold_multiplier = 30.0, distance_threshold = 30, fit_window_span = 20):
 		settings = [background_span, peak_threshold_multiplier, distance_threshold, fit_window_span]
 		filtered_peaks, top_results, bottom_results = self.__CalculateGradients__(self.filtered_image_array, settings)
-		
+		figure = OutputPlot(source_filepath = self.source_filepath, display_flag = display_plots, save_image_flag = save_plots, original_image = self.original_image)
 		if top_results:
 			top_results.append(self.__GradientToVelocity__(top_results[0][0][0]))
-			
+			figure.AddPlot(name = 'top', data = [top_results[2][:,0], top_results[2][:,1]], fit = [top_results[2][:,0], self.__f__(top_results[2][:,0], top_results[0][0][0], top_results[0][0][1])], colour = ['red', 'black'], gradient = abs(top_results[0][0][0]), r_squared = abs(top_results[1]), velocity = abs(top_results[3]))
 		if bottom_results:
 			bottom_results.append(self.__GradientToVelocity__(bottom_results[0][0][0]))
-		if top_results or bottom_results:
-			self.__PlotResults__(display, output_directory, top_results, bottom_results, filtered_peaks)
-			status, notes = self.__CreateTableEntry__(top_results, bottom_results, filtered_peaks)
-		else:
-			status, notes = 'empty', 'Cannot find event leading edge above ' + str(peak_threshold_multiplier) + ' standard deviations above the background intensity'
-		return status, notes, top_results, bottom_results
+			figure.AddPlot(name = 'bottom', data = [bottom_results[2][:,0], bottom_results[2][:,1]], fit = [bottom_results[2][:,0], self.__f__(bottom_results[2][:,0], bottom_results[0][0][0], bottom_results[0][0][1])], colour = ['red', 'black'], gradient = abs(bottom_results[0][0][0]), r_squared = abs(bottom_results[1]), velocity = abs(bottom_results[3]))
+		status = figure.Output()
+		#~if top_results or bottom_results:
+			#~self.__PlotResults__(display, output_directory, top_results, bottom_results, filtered_peaks)
+			#~status, notes = self.__CreateTableEntry__(top_results, bottom_results, filtered_peaks)
+		#~else:
+			#~status, notes = 'empty', 'Cannot find event leading edge above ' + str(peak_threshold_multiplier) + ' standard deviations above the background intensity'
+		return status, top_results, bottom_results
 		
 class WaveFromFile(Wave):
 	def __init__(self, file_path, lines_per_second, line_width):
-		self.load_type = 'file'
 		self.source_filepath = file_path
 		self.original_image = Image.open(file_path)
 		self.lines_per_second = lines_per_second
@@ -428,20 +428,31 @@ class WaveFromFile(Wave):
 
 class OutputPlot():
 	import matplotlib.pyplot as plt
-	def __init__(self, source_filepath, display_flag, original_image):
+	from os import path, makedirs
+	
+	def __init__(self, source_filepath, display_flag, save_image_flag, original_image):
 		self.source_filepath = source_filepath
 		self.display_flag = display_flag
+		self.save_image_flag = save_image_flag
 		self.original_image = original_image
 		self.total_peaks = 0
+		self.num_plots = 0
 		self.fig = plt.figure()
 		plt.imshow(self.original_image)
-		plt.title(source_filename)
+		plt.title(source_filepath.split('/')[-1][:-4])
 		self.label_lines = []
+		self.plot_names = []
 		self.gradients = []
 		self.velocities = []
 		self.r_squared = []
 		self.plot_finalised = False
 		self.short_wavefront = False
+	
+	def __CreateFolders__(self, directories):
+		for current_directory in directories:
+			if current_directory != '':
+				if not path.exists(current_directory):
+					makedirs(current_directory)
 		
 	def AddPlot(self, name, data, fit, colour, gradient, r_squared, velocity):
 		plt.plot(data[0], data[1], color = colour[0])
@@ -450,32 +461,51 @@ class OutputPlot():
 		self.velocities.append(velocity)
 		self.r_squared.append(r_squared)
 		self.total_peaks = self.total_peaks + len(data[0])
-		self.label_lines.append('Gradient  (' + name + ') :' + str(gradient)
-		self.label_lines.append('r_squared (' + name + ') :' + str(r_squared)
-		self.label_lines.append('Velocity  (' + name + ') :' + str(velocity)
+		self.label_lines.append('Gradient  (' + name + ') :' + str(round(gradient, 3)))
+		self.label_lines.append('r_squared (' + name + ') :' + str(round(r_squared, 3)))
+		self.label_lines.append('Velocity  (' + name + ') :' + str(velocity))
+		self.plot_names.append(name)
+		self.num_plots = self.num_plots + 1
 	
 	def __Finalise__(self):
 		if len(self.gradients) > 1:
 			gradient = sum(self.gradients) / float(len(self.gradients))
 			velocity = sum(self.velocities) / float(len(self.velocities))
-			self.label_lines.append('Gradient  (mean) :' + str(gradient)
-			self.label_lines.append('Velocity  (mean) :' + str(velocity)
+			self.label_lines.append('Gradient  (mean) :' + str(round(gradient, 3)))
+			self.label_lines.append('Velocity  (mean) :' + str(velocity))
 		for i, current_label_line in enumerate(self.label_lines):
-			plt.text(10, 20 + (20 * i), current_label_line, fontsize=6, color = 'white')
-		plt.axis((0, self.original_image_array.shape[1], self.original_image_array.shape[0], 0))
+			plt.text(5, 10 + (10 * i), current_label_line, fontsize=6, color = 'white')
+		plt.axis((0, self.original_image.size[0], self.original_image.size[1], 0))
 		plt.axis('off')
 		self.fig.tight_layout()
 		self.plot_finalised = True
-		if self.total_peaks < self.original_image.size[1]:
+		if self.total_peaks < (self.original_image.size[1] / 4.0):
 			self.short_wavefront = True
 		else:
 			self.short_wavefront = False
 		
-	def ShowResults(self):
-		plt.show()
+	def Output(self):
+		if self.plot_finalised == False:
+			self.__Finalise__()
+		if self.display_flag == True:
+			plt.show()
+		if self.save_image_flag == True:
+			self.__SaveResults__()
+		plt.close()
+		if self.short_wavefront == True:
+			status = 'short'
+		elif (self.short_wavefront == False) and (self.num_plots > 0):
+			status = 'good'
+		else:
+			status = 'empty'
+		return status
 	
-	def SaveResults(self):
+	def __SaveResults__(self):
+		if self.plot_finalised == False:
+			self.__Finalise__()
+			self.plot_finalised = True
 		output_directory = ''.join([chunk + '/' for chunk in self.source_filepath.split('/')[:-1]])
+		source_filename = self.source_filepath.split('/')[-1][:-4]
 		self.__CreateFolders__([output_directory + 'good', output_directory + 'suspect'])
 		if self.short_wavefront == True:
 			output_direction_choice = 'suspect/'
