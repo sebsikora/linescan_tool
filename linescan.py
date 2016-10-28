@@ -269,13 +269,16 @@ class Wave():
 				min_x_index = i
 		top_peaks = final_peaks[0:min_x_index]
 		bottom_peaks = final_peaks[min_x_index:]
-		#print top_peaks[0:20]
 		return top_peaks, bottom_peaks
 	
 	def __FitRegion__(self, region_peaks, filtered_peaks):
 		lowest_sse = 9.9e25
+		# Moving fit window span is 3/4 of the total length of the filtered peaks in this region.
 		fit_window_span = int(region_peaks.shape[0]*(3.0/4.0))
+		# If this value is greater than 1/4 of the total filtered peaks, then fit it.
+		# Else, return an empty result as the region is too short to give a dependable reading.
 		if fit_window_span > (filtered_peaks.shape[0] / 4) :
+			# Iteratively fit a subset of the peaks in this region of width fit_window_span. Store the lowest sse between fit and data.
 			for i in range(region_peaks.shape[0] - fit_window_span):
 				# Get a subset of the data, to which we will try and fit a straight line.
 				peaks_fitting_window = region_peaks[i:i + fit_window_span,:]
@@ -333,10 +336,12 @@ class Wave():
 			label_lines.append('          Lower = ' + str(bottom_results[1]))
 		elif bottom_results:
 			fit_gradient = abs(bottom_results[0][0][0])
+			fit_velocity = abs(bottom_results[3])
 			label_lines.append('Gradient: Lower = ' + str(abs(bottom_results[0][0][0])))
 			label_lines.append('r^2       Lower = ' + str(bottom_results[1]))
 		elif top_results:
 			fit_gradient = abs(top_results[0][0][0])
+			fit_velocity = abs(top_results[3])
 			label_lines.append('Gradient: Upper = ' + str(abs(top_results[0][0][0])))
 			label_lines.append('r^2     : Upper = ' + str(top_results[1]))
 		
@@ -396,8 +401,10 @@ class Wave():
 	def Analyse(self, display = False, output_directory = '', background_span = 50, peak_threshold_multiplier = 30.0, distance_threshold = 30, fit_window_span = 20):
 		settings = [background_span, peak_threshold_multiplier, distance_threshold, fit_window_span]
 		filtered_peaks, top_results, bottom_results = self.__CalculateGradients__(self.filtered_image_array, settings)
+		
 		if top_results:
 			top_results.append(self.__GradientToVelocity__(top_results[0][0][0]))
+			
 		if bottom_results:
 			bottom_results.append(self.__GradientToVelocity__(bottom_results[0][0][0]))
 		if top_results or bottom_results:
@@ -418,3 +425,61 @@ class WaveFromFile(Wave):
 		blurred_image = self.original_image.convert('L').filter(ImageFilter.BLUR)
 		self.filtered_image = blurred_image.filter(ImageFilter.SMOOTH)
 		self.filtered_image_array = np.array(self.filtered_image)
+
+class OutputPlot():
+	import matplotlib.pyplot as plt
+	def __init__(self, source_filepath, display_flag, original_image):
+		self.source_filepath = source_filepath
+		self.display_flag = display_flag
+		self.original_image = original_image
+		self.total_peaks = 0
+		self.fig = plt.figure()
+		plt.imshow(self.original_image)
+		plt.title(source_filename)
+		self.label_lines = []
+		self.gradients = []
+		self.velocities = []
+		self.r_squared = []
+		self.plot_finalised = False
+		self.short_wavefront = False
+		
+	def AddPlot(self, name, data, fit, colour, gradient, r_squared, velocity):
+		plt.plot(data[0], data[1], color = colour[0])
+		plt.plot(fit[0], fit[1], color = colour[1])
+		self.gradients.append(gradient)
+		self.velocities.append(velocity)
+		self.r_squared.append(r_squared)
+		self.total_peaks = self.total_peaks + len(data[0])
+		self.label_lines.append('Gradient  (' + name + ') :' + str(gradient)
+		self.label_lines.append('r_squared (' + name + ') :' + str(r_squared)
+		self.label_lines.append('Velocity  (' + name + ') :' + str(velocity)
+	
+	def __Finalise__(self):
+		if len(self.gradients) > 1:
+			gradient = sum(self.gradients) / float(len(self.gradients))
+			velocity = sum(self.velocities) / float(len(self.velocities))
+			self.label_lines.append('Gradient  (mean) :' + str(gradient)
+			self.label_lines.append('Velocity  (mean) :' + str(velocity)
+		for i, current_label_line in enumerate(self.label_lines):
+			plt.text(10, 20 + (20 * i), current_label_line, fontsize=6, color = 'white')
+		plt.axis((0, self.original_image_array.shape[1], self.original_image_array.shape[0], 0))
+		plt.axis('off')
+		self.fig.tight_layout()
+		self.plot_finalised = True
+		if self.total_peaks < self.original_image.size[1]:
+			self.short_wavefront = True
+		else:
+			self.short_wavefront = False
+		
+	def ShowResults(self):
+		plt.show()
+	
+	def SaveResults(self):
+		output_directory = ''.join([chunk + '/' for chunk in self.source_filepath.split('/')[:-1]])
+		self.__CreateFolders__([output_directory + 'good', output_directory + 'suspect'])
+		if self.short_wavefront == True:
+			output_direction_choice = 'suspect/'
+		else:
+			output_direction_choice = 'good/'
+		plt.savefig(output_directory + output_direction_choice + source_filename + '.png', bbox_inches='tight')
+		
