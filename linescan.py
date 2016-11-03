@@ -372,8 +372,9 @@ class OutputPlot():
 		self.total_peaks = 0
 		self.num_plots = 0
 		self.fig = plt.figure()
+		self.title = title
 		plt.imshow(self.original_image)
-		plt.title(title)
+		plt.title(self.title)
 		self.label_lines = []
 		self.plot_names = []
 		self.gradients = []
@@ -445,5 +446,5 @@ class OutputPlot():
 			output_direction_choice = 'suspect/'
 		else:
 			output_direction_choice = 'good/'
-		plt.savefig(output_directory + output_direction_choice + source_filename + '.png', bbox_inches='tight')
+		plt.savefig(output_directory + output_direction_choice + self.title + '.png', bbox_inches='tight')
 		

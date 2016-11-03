@@ -25,14 +25,14 @@ def CreateTableRow(image_name, intensity_threshold, status, top_results, bottom_
 	else:
 		if top_results and bottom_results:
 			top_gradient = abs(top_results[0][0][0])
-			top_r_sqaured = abs(top_results[1])
+			top_r_squared = abs(top_results[1])
 			bottom_gradient = abs(bottom_results[0][0][0])
-			bottom_r_sqaured = abs(bottom_results[1])
+			bottom_r_squared = abs(bottom_results[1])
 			top_velocity = abs(top_results[3])
 			bottom_velocity = abs(bottom_results[3])
 		elif top_results and (not bottom_results):
 			top_gradient = abs(top_results[0][0][0])
-			top_r_sqaured = abs(top_results[1])
+			top_r_squared = abs(top_results[1])
 			bottom_gradient = 'NA'
 			bottom_r_squared = 'NA'
 			top_velocity = abs(top_results[3])
