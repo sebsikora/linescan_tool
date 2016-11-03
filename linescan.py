@@ -205,6 +205,7 @@ class LineScan():
 class Wave():
 	def __init__(self, name, image_array, lines_per_second, line_width):
 		self.source_filepath = name
+		self.image_name = name
 		self.original_image_array = image_array
 		self.lines_per_second = lines_per_second
 		self.line_width = line_width
@@ -313,96 +314,10 @@ class Wave():
 		velocity = gradient * self.line_width * self.lines_per_second
 		return velocity
 	
-	#~def __PlotResults__(self, display, output_directory, top_results, bottom_results, filtered_peaks):
-		#~if self.load_type == 'file':
-			#~if not output_directory:
-				#~print self.source_filepath
-				#~output_directory = ''.join([chunk + '/' for chunk in self.source_filepath.split('/')[:-1]])
-			#~source_filename = self.source_filepath.split('/')[-1][:-4]	
-		#~else:
-			#~source_filename = self.source_filepath
-		#~self.__CreateFolders__([output_directory + 'good', output_directory + 'suspect'])
-		#~
-		#~label_lines = []
-		#~if top_results and bottom_results:
-			#~fit_gradient = (abs(bottom_results[0][0][0]) + abs(top_results[0][0][0])) / 2.0
-			#~fit_velocity = (abs(bottom_results[3] + abs(top_results[3]))) / 2.0
-			#~label_lines.append('Gradient: Upper = ' + str(abs(top_results[0][0][0])))
-			#~label_lines.append('          Lower = ' + str(abs(bottom_results[0][0][0])))
-			#~label_lines.append('          Mean = ' + str(fit_gradient))
-			#~label_lines.append('Velocity: Upper = ' + str(abs(top_results[3])))
-			#~label_lines.append('          Lower = ' + str(abs(bottom_results[3])))
-			#~label_lines.append('          Mean = ' + str(fit_velocity))
-			#~label_lines.append('r^2     : Upper = ' + str(top_results[1]))
-			#~label_lines.append('          Lower = ' + str(bottom_results[1]))
-		#~elif bottom_results:
-			#~fit_gradient = abs(bottom_results[0][0][0])
-			#~fit_velocity = abs(bottom_results[3])
-			#~label_lines.append('Gradient: Lower = ' + str(abs(bottom_results[0][0][0])))
-			#~label_lines.append('r^2       Lower = ' + str(bottom_results[1]))
-		#~elif top_results:
-			#~fit_gradient = abs(top_results[0][0][0])
-			#~fit_velocity = abs(top_results[3])
-			#~label_lines.append('Gradient: Upper = ' + str(abs(top_results[0][0][0])))
-			#~label_lines.append('r^2     : Upper = ' + str(top_results[1]))
-		#~
-		#~self.fig = plt.figure()
-		#~plt.imshow(self.original_image)
-		#~plt.title(source_filename)
-		#~
-		#~for i, current_label_line in enumerate(label_lines):
-			#~plt.text(10, 20 + (20 * i), current_label_line, fontsize=6, color = 'white')
-		#~
-		#~if bottom_results:
-			#~#plt.plot(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
-			#~self.__PlotSeries__(bottom_results[2][:,0], bottom_results[2][:,1], 'red')
-			#~#plt.plot(self.__f__(bottom_results[2][:,1], bottom_results[0][0][0], bottom_results[0][0][1]), bottom_results[2][:,1], 'black')
-			#~self.__PlotSeries__(bottom_results[2][:,0], self.__f__(bottom_results[2][:,0], bottom_results[0][0][0], bottom_results[0][0][1]),'black')
-		#~if top_results:
-			#~#plt.plot(top_results[2][:,0], top_results[2][:,1], 'red')
-			#~self.__PlotSeries__(top_results[2][:,0], top_results[2][:,1], 'red')
-			#~#plt.plot(self.__f__(top_results[2][:,1], top_results[0][0][0], top_results[0][0][1]), top_results[2][:,1], 'black')
-			#~self.__PlotSeries__(top_results[2][:,0], self.__f__(top_results[2][:,0], top_results[0][0][0], top_results[0][0][1]), 'black')
-		#~
-		#~plt.axis((0, self.original_image_array.shape[1], self.original_image_array.shape[0], 0))
-		#~plt.axis('off')
-		#~self.fig.tight_layout()
-		#~
-		#~if filtered_peaks.shape[0] < (self.original_image_array.shape[0] / 4.0):
-			#~output_direction_choice = 'suspect/'
-		#~else:
-			#~output_direction_choice = 'good/'
-		#~plt.savefig(output_directory + output_direction_choice + source_filename + '.png', bbox_inches='tight')
-		#~
-		#~if display == True:
-			#~plt.show()
-		#~else:
-			#~plt.close()
-	#~
-	#~def __PlotSeries__(self, x_values, y_values, colour):
-		#~plt.plot(x_values, y_values, color = colour)
-	
-	def __CreateTableEntry__(self, top_results, bottom_results, filtered_peaks):
-		if filtered_peaks.shape[0] < int(self.original_image_array.shape[0] / 4.0):
-			short = True
-		else:
-			short = False
-		notes = ''
-		if bottom_results:
-			notes = notes + ' Lower gradient = ' + str(abs(bottom_results[0][0][0])) + ', Lower r^2 = ' + str(bottom_results[1]) + ','
-			status = 'good'
-		if top_results:
-			notes = notes + ' Upper gradient = ' + str(abs(top_results[0][0][0])) + ', Upper r^2 = ' + str(top_results[1]) + ','
-			status = 'good'
-		if short:
-			notes = notes + ' Warning - fitted region less than 1/4 of frame height'
-			status = 'short'
-		return status, notes
-	
 	def Analyse(self, display_plots = True, save_plots = True, output_directory = '', background_span = 50, peak_threshold_multiplier = 30.0, distance_threshold = 30, fit_window_span = 20):
 		settings = [background_span, peak_threshold_multiplier, distance_threshold, fit_window_span]
-		filtered_peaks, top_results, bottom_results = self.__CalculateGradients__(self.filtered_image_array, settings)
-		figure = OutputPlot(source_filepath = self.source_filepath, display_flag = display_plots, save_image_flag = save_plots, original_image = self.original_image)
+		filtered_peaks, top_results, bottom_results = self.__CalculateGradients__(self.filtered_image_array, settings) 
+		figure = OutputPlot(self.image_name + '_' + str(peak_threshold_multiplier), source_filepath = self.source_filepath, display_flag = display_plots, save_image_flag = save_plots, original_image = self.original_image)
 		if top_results:
 			top_results.append(self.__GradientToVelocity__(top_results[0][0][0]))
 			figure.AddPlot(name = 'top', data = [top_results[2][:,0], top_results[2][:,1]], fit = [top_results[2][:,0], self.__f__(top_results[2][:,0], top_results[0][0][0], top_results[0][0][1])], colour = ['red', 'black'], gradient = abs(top_results[0][0][0]), r_squared = abs(top_results[1]), velocity = abs(top_results[3]))
@@ -410,16 +325,33 @@ class Wave():
 			bottom_results.append(self.__GradientToVelocity__(bottom_results[0][0][0]))
 			figure.AddPlot(name = 'bottom', data = [bottom_results[2][:,0], bottom_results[2][:,1]], fit = [bottom_results[2][:,0], self.__f__(bottom_results[2][:,0], bottom_results[0][0][0], bottom_results[0][0][1])], colour = ['red', 'black'], gradient = abs(bottom_results[0][0][0]), r_squared = abs(bottom_results[1]), velocity = abs(bottom_results[3]))
 		status = figure.Output()
-		#~if top_results or bottom_results:
-			#~self.__PlotResults__(display, output_directory, top_results, bottom_results, filtered_peaks)
-			#~status, notes = self.__CreateTableEntry__(top_results, bottom_results, filtered_peaks)
-		#~else:
-			#~status, notes = 'empty', 'Cannot find event leading edge above ' + str(peak_threshold_multiplier) + ' standard deviations above the background intensity'
-		return status, top_results, bottom_results
+		if top_results and bottom_results:
+			top_gradient = abs(top_results[0][0][0])
+			bottom_gradient = abs(bottom_results[0][0][0])
+			top_velocity = abs(top_results[3])
+			bottom_velocity = abs(bottom_results[3])
+			mean_gradient = (top_gradient + bottom_gradient) / 2.0
+			mean_velocity = (top_velocity + bottom_velocity) / 2.0
+		elif top_results and (not bottom_results):
+			top_gradient = abs(top_results[0][0][0])
+			top_velocity = abs(top_results[3])
+			mean_gradient = top_gradient
+			mean_velocity = top_velocity
+		elif (not top_results) and bottom_results:
+			bottom_gradient = abs(bottom_results[0][0][0])
+			bottom_velocity = abs(bottom_results[3])
+			mean_gradient = bottom_gradient
+			mean_velocity = bottom_velocity
+		elif (not top_results) and (not bottom_results):
+			mean_gradient = 0.0
+			mean_velocity = 0.0
+		mean_result = [mean_gradient, mean_velocity]
+		return status, top_results, bottom_results, mean_result
 		
 class WaveFromFile(Wave):
 	def __init__(self, file_path, lines_per_second, line_width):
 		self.source_filepath = file_path
+		self.image_name = file_path.split('/')[-1].split('.')[0]
 		self.original_image = Image.open(file_path)
 		self.lines_per_second = lines_per_second
 		self.line_width = line_width
@@ -432,7 +364,7 @@ class OutputPlot():
 	import matplotlib.pyplot as plt
 	from os import path, makedirs
 	
-	def __init__(self, source_filepath, display_flag, save_image_flag, original_image):
+	def __init__(self, title, source_filepath, display_flag, save_image_flag, original_image):
 		self.source_filepath = source_filepath
 		self.display_flag = display_flag
 		self.save_image_flag = save_image_flag
@@ -441,7 +373,7 @@ class OutputPlot():
 		self.num_plots = 0
 		self.fig = plt.figure()
 		plt.imshow(self.original_image)
-		plt.title(source_filepath.split('/')[-1][:-4])
+		plt.title(title)
 		self.label_lines = []
 		self.plot_names = []
 		self.gradients = []
