@@ -45,6 +45,13 @@ def CreateTableRow(image_name, intensity_threshold, status, top_results, bottom_
 			bottom_r_squared = abs(bottom_results[1])
 			top_velocity = 'NA'
 			bottom_velocity = abs(bottom_results[3])
+		elif (not top_results) and (not bottom_results):
+			top_gradient = 'NA'
+			top_r_squared = 'NA'
+			bottom_gradient = 'NA'
+			bottom_r_squared = 'NA'
+			bottom_velocity = 'NA'
+			top_velocity = 'NA'
 		row_to_return = [image_name, str(intensity_threshold), status, str(top_r_squared), str(top_gradient), str(top_velocity), str(bottom_r_squared), str(bottom_gradient), str(bottom_velocity), str(mean_result[0]), str(mean_result[1])]
 	return row_to_return
 			
