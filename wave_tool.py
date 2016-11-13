@@ -5,17 +5,18 @@ from os import walk
 
 folder_path = '/home/sebsikora/Documents/linescan_tool/test/'
 output_filename = 'overall_analysis_results.csv'
-output_directory = folder_path
 lines_per_second = 188.0
 line_width = 0.0000002
+file_extension = '.png'
 
+output_directory = folder_path
 intensity_thresholds = [10.0, 12.5, 15.0, 17.5, 20.0]
 
 def getFilenames(image_parent_directory):
 	list_of_files = []
 	for root, directories, filenames in walk(image_parent_directory):
 		for filename in filenames:
-			if filename.endswith('.png'):
+			if filename.endswith(file_extension):
 				list_of_files.append(join(root, filename))
 	return list_of_files
 
@@ -53,31 +54,37 @@ def WriteOutputTable(mean_result, output_directory, output_filename, rows):
 	csv_writer.writerow(['Image name', 'Intensity threshold', 'Status', 'Top fit r^2', 'Top Gradient', 'Top Velocity', 'Bottom fit r^2', 'Bottom Gradient', 'Bottom Velocity', 'Mean Gradient', 'Mean Velocity'])
 	for row in rows:
 		csv_writer.writerow(row)
-	csv_writer.writerow(['', '', '', '', '', '', '', '', '', '', 'Mean of mean gradients', mean_result[0]])
-	csv_writer.writerow(['', '', '', '', '', '', '', '', '', '', 'Mean of mean velocities', mean_result[1]])
+	csv_writer.writerow(['', '', '', '', '', '', '', '', '', '', 'Mean of mean gradients', mean_result[0], 'Mean of mean velocities', mean_result[1]])
 	output_file.close()
 
 file_paths = getFilenames(folder_path)
 
-for current_input_file in file_paths:
-	image_name = current_input_file.split('/')[-1].split('.')[0]
-	rows = []
-	mean_of_mean_gradients = 0.0
-	mean_of_mean_velocities = 0.0
-	number_of_good_analyses = 0
-	for current_intensity_threshold in intensity_thresholds:
-		wave = WaveFromFile(file_path = current_input_file, lines_per_second = lines_per_second, line_width = line_width)
-		status, top_results, bottom_results, mean_result = wave.Analyse(display_plots = False, output_directory = '', background_span = 25, distance_threshold = 10, fit_window_span = 10, peak_threshold_multiplier = current_intensity_threshold)
-		if status == 'good':
-			sum_of_mean_gradients = mean_of_mean_gradients + mean_result[0]
-			sum_of_mean_velocities = mean_of_mean_velocities + mean_result[1]
-			number_of_good_analyses += 1
-		next_row = CreateTableRow(image_name, current_intensity_threshold, status, top_results, bottom_results, mean_result)
-		print next_row
-		rows.append(next_row)
-	good_mean_gradient = sum_of_mean_gradients / float(number_of_good_analyses)
-	good_mean_velocity = sum_of_mean_velocities / float(number_of_good_analyses)
-	WriteOutputTable([good_mean_gradient, good_mean_velocity], output_directory, output_filename, rows)
+if not file_paths:
+	print 'No files of type ' + file_extension + ' in the chosen directory'
+else:
+	for current_input_file in file_paths:
+		image_name = current_input_file.split('/')[-1].split('.')[0]
+		rows = []
+		sum_of_mean_gradients = 0.0
+		sum_of_mean_velocities = 0.0
+		number_of_good_analyses = 0
+		for current_intensity_threshold in intensity_thresholds:
+			wave = WaveFromFile(file_path = current_input_file, lines_per_second = lines_per_second, line_width = line_width)
+			status, top_results, bottom_results, mean_result = wave.Analyse(display_plots = False, output_directory = '', background_span = 25, distance_threshold = 10, fit_window_span = 10, peak_threshold_multiplier = current_intensity_threshold)
+			if status == 'good':
+				sum_of_mean_gradients = sum_of_mean_gradients + mean_result[0]
+				sum_of_mean_velocities = sum_of_mean_velocities + mean_result[1]
+				number_of_good_analyses += 1
+			next_row = CreateTableRow(image_name, current_intensity_threshold, status, top_results, bottom_results, mean_result)
+			print next_row
+			rows.append(next_row)
+		if number_of_good_analyses > 0:			
+			good_mean_gradient = str(sum_of_mean_gradients / float(number_of_good_analyses))
+			good_mean_velocity = str(sum_of_mean_velocities / float(number_of_good_analyses))
+		else:
+			good_mean_gradient = 'NA'
+			good_mean_velocity = 'NA'
+		WriteOutputTable([good_mean_gradient, good_mean_velocity], output_directory, output_filename, rows)
 
 	
 	
